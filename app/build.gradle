@@ -1,5 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'groovyx.android'
+def channels = ["xiaomi", "huawei", "sumsung", "meizu"]
+def MAP_KEY = "d13a6f34b269013b0d8a57aba7d76faa"
 android {
     compileSdkVersion 26
     buildToolsVersion "26.0.1"
@@ -17,7 +19,35 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+
+    signingConfigs {
+        release {
+            storeFile file("../keystore/test.jks")
+            storePassword "123456"
+            keyAlias "test"
+            keyPassword "123456"
+        }
+
+        debug {
+            initWith release
+        }
+    }
+
+    for (int i = 0; i < channels.size(); i++) {
+        productFlavors.create(channels[i])
+    }
+    assert productFlavors.size() == channels.size()
+    productFlavors.all { product -> product.manifestPlaceholders = ["MAP_KEY_PLACEHOLDER": MAP_KEY] }
+
+
+
+    lintOptions {
+        disable 'InvalidPackage'
+        // lint sees references in the grooid jar to unavailable java classes
+    }
 }
+
 androidGroovy {
     sourceSets {
         main {
@@ -27,13 +57,19 @@ androidGroovy {
         }
     }
 }
+
+def supportVersion = gradle.supportVersion
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    compile 'com.android.support:appcompat-v7:26.+'
+    compile "com.android.support:appcompat-v7:$supportVersion"
+    compile "com.android.support:design:$supportVersion"
     compile 'org.codehaus.groovy:groovy:2.4.11:grooid'
     compile 'com.android.support.constraint:constraint-layout:1.0.1'
+    compile 'com.jakewharton:butterknife:7.0.1'
+    compile 'com.amap.api:location:latest.integration'
+    compile 'com.squareup.retrofit:retrofit:2.0.0-beta2'
     testCompile 'junit:junit:4.12'
 }
