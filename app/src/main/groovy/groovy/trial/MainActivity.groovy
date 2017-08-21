@@ -1,11 +1,13 @@
 package groovy.trial
 
+import android.app.ActionBar
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
 import android.util.Log
+import android.view.View
 import com.amap.api.location.AMapLocation
 import com.amap.api.location.AMapLocationClient
 import com.amap.api.location.AMapLocationClientOption
@@ -32,8 +34,9 @@ public class MainActivity extends AppCompatActivity {
     AMapLocationListener listener = new AMapLocationListener() {
         @Override
         void onLocationChanged(AMapLocation location) {
-            if (cityName) {
-                Log.i(TAG.toString(), "You are now in $cityName  cityCode is:$cityCode")
+            if (location.city) {
+                Log.i(TAG.toString(), "You are now in ====$location.city  cityCode is:$location.cityCode")
+                getSupportActionBar().setTitle(location.city)
                 locationClient.unRegisterLocationListener(this)
                 cityName = location.city
                 cityCode = location.cityCode
@@ -51,8 +54,9 @@ public class MainActivity extends AppCompatActivity {
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view)
         recyclerView.layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
         recyclerView.adapter = (weatherItemAdapter = new WeatherItemAdapter())
+        recyclerView.overScrollMode = View.OVER_SCROLL_NEVER
         setSupportActionBar(toolbar)
-        getSupportActionBar().setDisplayShowTitleEnabled(false)
+        getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE)
         locationClient = new AMapLocationClient(this)
         locationClient.locationListener = listener
         locationClientOption.locationCacheEnable = true
@@ -62,13 +66,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    def static fetchWeatherInfo(String cityName) {
+    def fetchWeatherInfo(String cityName) {
         RestApiHelper restApiHelper = RestApiHelper.get();
         restApiHelper.getWeatherInfo(cityName, new Callback<WeatherWrapper>() {
             @Override
             void onResponse(Response<WeatherWrapper> response, Retrofit retrofit) {
                 Log.i("AAA", "You are now in $cityName  statusCode:" + response.body().status + "" +
                         "thread:${Thread.currentThread().name}")
+                if (response.success) {
+                    Log.i(TAG.toString(),response.body().data.forecast.toString())
+                    weatherItemAdapter.setDatas(response.body().data.forecast)
+                }
 
             }
 
