@@ -2,6 +2,7 @@ package groovy.trial.model
 
 class WeatherWrapper {
 
-    WeatherInfo data
-
+    WeatherBody data
+    String status
+    String desc
 }
